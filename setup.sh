@@ -30,7 +30,7 @@ echo "Activating virtual environment..."
 source venv/bin/activate
 
 echo "Installing Python dependencies..."
-pip install -r ../requirements.txt
+pip install -r requirements.txt
 
 echo "Initializing database..."
 python3 -m backend.database.init_db
