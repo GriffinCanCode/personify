@@ -83,7 +83,7 @@ async def upload_files(
                 source_type=metadata.get('source_type', 'unknown'),
                 file_path=file_path,
                 content_hash=content_hash,
-                metadata=metadata
+                meta_data=metadata
             )
             
             db.add(document)
@@ -116,7 +116,7 @@ async def upload_files(
                     content=chunk_text,
                     chunk_index=idx,
                     embedding_id=chunk_id,
-                    metadata=chunk_metadata
+                    meta_data=chunk_metadata
                 )
                 db.add(chunk_record)
             

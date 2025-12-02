@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Float, JSON, Boolean
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, mapped_column
 from sqlalchemy.sql import func
 from backend.database.connection import Base
 
@@ -11,7 +11,7 @@ class Document(Base):
     source_type = Column(String, nullable=False)  # email, journal, voice, etc.
     file_path = Column(String, nullable=False)
     content_hash = Column(String, unique=True)
-    metadata = Column(JSON)
+    meta_data = Column("metadata", JSON)  # Renamed to avoid SQLAlchemy reserved word
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     processed_at = Column(DateTime(timezone=True))
     
@@ -25,7 +25,7 @@ class Chunk(Base):
     content = Column(Text, nullable=False)
     chunk_index = Column(Integer, nullable=False)
     embedding_id = Column(String)  # Reference to ChromaDB
-    metadata = Column(JSON)
+    meta_data = Column("metadata", JSON)  # Renamed to avoid SQLAlchemy reserved word
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     document = relationship("Document", back_populates="chunks")
@@ -49,7 +49,7 @@ class Message(Base):
     content = Column(Text, nullable=False)
     confidence_score = Column(Float)
     retrieved_chunks = Column(JSON)  # References to chunks used
-    metadata = Column(JSON)
+    meta_data = Column("metadata", JSON)  # Renamed to avoid SQLAlchemy reserved word
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     conversation = relationship("Conversation", back_populates="messages")
