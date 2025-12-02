@@ -1,14 +1,15 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { ChatMessage } from '@/components/ChatMessage'
+import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { ChatMessage } from '@/components/ChatMessage'
 import { chatApi, feedbackApi } from '@/lib/api'
-import { Send, Loader2 } from 'lucide-react'
+import { useErrorLogger, useInteractionLogger, useLogger } from '@/lib/logger'
+import { useMutation } from '@tanstack/react-query'
+import { Loader2, Send } from 'lucide-react'
 import Link from 'next/link'
+import { useEffect, useRef, useState } from 'react'
 
 interface Message {
   id?: number
@@ -24,12 +25,20 @@ export default function ChatPage() {
   const [conversationId, setConversationId] = useState<number | undefined>()
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
+  // Logging hooks
+  useLogger('ChatPage')
+  const logInteraction = useInteractionLogger('ChatPage')
+  const logError = useErrorLogger('ChatPage')
+
   const chatMutation = useMutation({
     mutationFn: (message: string) =>
-      chatApi.sendMessage(message, conversationId),
+      chatApi.sendMessage({
+        message,
+        conversationId: conversationId ? String(conversationId) : undefined,
+      }),
     onSuccess: (data) => {
       setConversationId(data.conversation_id)
-      setMessages(prev => [
+      setMessages((prev) => [
         ...prev,
         {
           id: data.message_id,
@@ -39,34 +48,54 @@ export default function ChatPage() {
           style_match: data.style_match,
         },
       ])
+
+      logInteraction('message_received', {
+        messageId: data.message_id,
+        confidenceScore: data.confidence_score,
+        styleMatch: data.style_match,
+      })
+    },
+    onError: (error) => {
+      logError(error, { conversationId })
     },
   })
 
   const feedbackMutation = useMutation({
-    mutationFn: ({ messageId, rating }: { messageId: number; rating: number }) =>
-      feedbackApi.submitFeedback(messageId, rating),
+    mutationFn: ({ messageId, rating }: { messageId: string; rating: number }) =>
+      feedbackApi.submitFeedback({ messageId, rating }),
+    onSuccess: (_, { messageId, rating }) => {
+      logInteraction('feedback_submitted', { messageId, rating })
+    },
+    onError: (error, { messageId }) => {
+      logError(error, { context: 'feedback_submission', messageId })
+    },
   })
 
   const handleSend = () => {
     if (!input.trim()) return
+
+    logInteraction('send_message', {
+      messageLength: input.length,
+      conversationId,
+    })
 
     const userMessage = {
       role: 'user' as const,
       content: input,
     }
 
-    setMessages(prev => [...prev, userMessage])
+    setMessages((prev) => [...prev, userMessage])
     chatMutation.mutate(input)
     setInput('')
   }
 
   const handleFeedback = (messageId: number, rating: number) => {
-    feedbackMutation.mutate({ messageId, rating })
+    feedbackMutation.mutate({ messageId: String(messageId), rating })
   }
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  })
 
   return (
     <div className="min-h-screen bg-background p-4">
@@ -95,23 +124,23 @@ export default function ChatPage() {
                 </div>
               </div>
             ) : (
-              messages.map((message, idx) => (
+              messages.map((message) => (
                 <ChatMessage
-                  key={idx}
+                  key={message.id || `${message.role}-${message.content.substring(0, 20)}`}
                   {...message}
                   messageId={message.id}
                   onFeedback={handleFeedback}
                 />
               ))
             )}
-            
+
             {chatMutation.isPending && (
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 <span>Virtual Griffin is thinking...</span>
               </div>
             )}
-            
+
             <div ref={messagesEndRef} />
           </div>
 
@@ -124,10 +153,7 @@ export default function ChatPage() {
                 placeholder="Type your message..."
                 disabled={chatMutation.isPending}
               />
-              <Button
-                onClick={handleSend}
-                disabled={!input.trim() || chatMutation.isPending}
-              >
+              <Button onClick={handleSend} disabled={!input.trim() || chatMutation.isPending}>
                 <Send className="w-4 h-4" />
               </Button>
             </div>
@@ -137,4 +163,3 @@ export default function ChatPage() {
     </div>
   )
 }
-

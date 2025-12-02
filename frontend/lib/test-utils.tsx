@@ -1,6 +1,7 @@
-import type { ReactElement } from 'react'
-import { render as rtlRender, type RenderOptions } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { type RenderOptions, render as rtlRender } from '@testing-library/react'
+import React from 'react'
+import type { ReactElement } from 'react'
 
 /**
  * Custom render function that wraps components with providers
@@ -24,4 +25,3 @@ export function render(ui: ReactElement, options?: RenderOptions) {
 // Re-export everything from testing-library
 export * from '@testing-library/react'
 export { default as userEvent } from '@testing-library/user-event'
-

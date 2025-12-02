@@ -74,14 +74,3 @@ class PersonalityProfile(Base):
     profile_data = Column(JSON, nullable=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    
-    # Profile data structure:
-    # {
-    #   "communication_style": {...},
-    #   "personality_traits": {...},
-    #   "values_hierarchy": [...],
-    #   "knowledge_domains": {...},
-    #   "decision_patterns": {...},
-    #   "context_adaptations": {...}
-    # }
-

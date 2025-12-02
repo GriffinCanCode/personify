@@ -90,6 +90,8 @@ build-frontend:
 # ═══════════════════════════════════════════════════════════
 
 dev:
+	@./kill-ports.sh
+	@echo ""
 	@echo "🚀 Starting development environment..."
 	@echo "   Backend:  http://localhost:8000"
 	@echo "   Frontend: http://localhost:3000"

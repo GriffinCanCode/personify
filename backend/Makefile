@@ -28,7 +28,7 @@ build: install db-init
 
 dev:
 	@echo "🚀 Starting backend development server..."
-	@$(VENV_BIN)/uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+	@CHROMA_TELEMETRY_IMPL="chromadb.telemetry.noop.Noop" $(VENV_BIN)/uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 
 test:
 	@echo "🧪 Running backend tests..."

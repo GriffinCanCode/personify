@@ -1,13 +1,13 @@
-import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
 
 // Example test - replace with actual component tests
 describe('Example Test Suite', () => {
   it('should render a basic component', () => {
     const TestComponent = () => <div>Hello, World!</div>
-    
+
     render(<TestComponent />)
-    
+
     expect(screen.getByText('Hello, World!')).toBeDefined()
   })
 
@@ -17,4 +17,3 @@ describe('Example Test Suite', () => {
     expect([1, 2, 3]).toContain(2)
   })
 })
-

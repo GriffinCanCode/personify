@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest'
-import { render, screen } from '@/lib/test-utils'
 import { Button } from '@/components/ui/button'
+import { render, screen } from '@/lib/test-utils'
+import { describe, expect, it } from 'vitest'
 
 describe('Button', () => {
   it('should render with default variant', () => {
@@ -37,4 +37,3 @@ describe('Button', () => {
     expect(button.className).toContain('lg')
   })
 })
-

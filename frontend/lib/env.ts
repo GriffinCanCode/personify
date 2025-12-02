@@ -5,8 +5,7 @@
 
 const envSchema = {
   NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-  NEXT_PUBLIC_ENABLE_ANALYTICS:
-    process.env.NEXT_PUBLIC_ENABLE_ANALYTICS === 'true',
+  NEXT_PUBLIC_ENABLE_ANALYTICS: process.env.NEXT_PUBLIC_ENABLE_ANALYTICS === 'true',
   NEXT_PUBLIC_ENABLE_DEBUG: process.env.NEXT_PUBLIC_ENABLE_DEBUG === 'true',
 } as const
 
@@ -20,4 +19,3 @@ for (const key of requiredEnvVars) {
 }
 
 export const env = envSchema
-

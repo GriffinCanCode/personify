@@ -1,18 +1,24 @@
 'use client'
 
-import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { FileUploader } from '@/components/FileUploader'
-import { uploadApi, personalityApi } from '@/lib/api'
-import { FileText, BarChart3, Sparkles } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { personalityApi, uploadApi } from '@/lib/api'
+import { useErrorLogger, useInteractionLogger, useLogger } from '@/lib/logger'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { BarChart3, FileText, Sparkles } from 'lucide-react'
 import Link from 'next/link'
+import { useState } from 'react'
 
 export default function UploadPage() {
   const queryClient = useQueryClient()
   const [analyzing, setAnalyzing] = useState(false)
+
+  // Logging hooks
+  useLogger('UploadPage')
+  const logInteraction = useInteractionLogger('UploadPage')
+  const logError = useErrorLogger('UploadPage')
 
   const { data: stats } = useQuery({
     queryKey: ['upload-stats'],
@@ -26,9 +32,15 @@ export default function UploadPage() {
 
   const uploadMutation = useMutation({
     mutationFn: uploadApi.uploadFiles,
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['upload-stats'] })
       queryClient.invalidateQueries({ queryKey: ['documents'] })
+      logInteraction('upload_success', {
+        resultCount: data.results?.length || 0,
+      })
+    },
+    onError: (error) => {
+      logError(error, { context: 'file_upload' })
     },
   })
 
@@ -37,6 +49,11 @@ export default function UploadPage() {
     onSuccess: () => {
       setAnalyzing(false)
       queryClient.invalidateQueries({ queryKey: ['personality'] })
+      logInteraction('personality_analysis_complete')
+    },
+    onError: (error) => {
+      setAnalyzing(false)
+      logError(error, { context: 'personality_analysis' })
     },
   })
 
@@ -46,6 +63,9 @@ export default function UploadPage() {
 
   const handleAnalyze = () => {
     setAnalyzing(true)
+    logInteraction('analyze_clicked', {
+      documentCount: stats?.total_documents || 0,
+    })
     analyzeMutation.mutate()
   }
 
@@ -73,9 +93,7 @@ export default function UploadPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">
-                {stats?.total_documents || 0}
-              </div>
+              <div className="text-3xl font-bold">{stats?.total_documents || 0}</div>
               <p className="text-sm text-muted-foreground">
                 {stats?.processed_documents || 0} processed
               </p>
@@ -90,12 +108,8 @@ export default function UploadPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">
-                {stats?.total_chunks || 0}
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Stored in vector database
-              </p>
+              <div className="text-3xl font-bold">{stats?.total_chunks || 0}</div>
+              <p className="text-sm text-muted-foreground">Stored in vector database</p>
             </CardContent>
           </Card>
 
@@ -124,13 +138,11 @@ export default function UploadPage() {
           <Card>
             <CardHeader>
               <CardTitle>Uploaded Documents</CardTitle>
-              <CardDescription>
-                All documents that have been uploaded and processed
-              </CardDescription>
+              <CardDescription>All documents that have been uploaded and processed</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {documents.map((doc: any) => (
+                {documents.map((doc) => (
                   <div
                     key={doc.id}
                     className="flex items-center justify-between p-3 border rounded"
@@ -138,7 +150,7 @@ export default function UploadPage() {
                     <div className="flex-1">
                       <p className="font-medium">{doc.filename}</p>
                       <p className="text-sm text-muted-foreground">
-                        {doc.chunk_count} chunks • {doc.source_type}
+                        {doc.chunk_count || 0} chunks • {doc.source_type}
                       </p>
                     </div>
                     <Badge variant={doc.processed_at ? 'default' : 'secondary'}>
@@ -154,4 +166,3 @@ export default function UploadPage() {
     </div>
   )
 }
-

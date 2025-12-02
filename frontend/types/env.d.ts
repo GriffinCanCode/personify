@@ -6,4 +6,3 @@ declare namespace NodeJS {
     readonly NEXT_PUBLIC_ENABLE_DEBUG?: string
   }
 }
-

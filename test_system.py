@@ -32,8 +32,8 @@ def test_imports():
         from backend.ingestion.parsers import ParserFactory
         print("✓ Parsers loaded")
         
-        from backend.personality.analyzer import StyleAnalyzer
-        print("✓ Personality analyzer loaded")
+        from backend.personality.ai_analyzer import AnalysisOrchestrator
+        print("✓ AI personality analyzer loaded")
         
         from backend.conversation.engine import ConversationEngine
         print("✓ Conversation engine loaded")

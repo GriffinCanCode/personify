@@ -1,11 +1,16 @@
 #!/bin/bash
 
+# Kill any processes on ports 8000 and 3000
+./kill-ports.sh
+echo ""
+
 echo "Starting Personify Development Environment"
 echo "==========================================="
 
-# Check if .env exists
-if [ ! -f .env ]; then
-    echo "❌ .env file not found. Run ./setup.sh first!"
+# Check if backend .env exists
+if [ ! -f backend/.env ]; then
+    echo "❌ backend/.env file not found!"
+    echo "Run: cd backend && ./setup-env.sh"
     exit 1
 fi
 
@@ -18,11 +23,11 @@ fi
 
 # Start backend in background
 echo "Starting backend..."
-cd backend || exit
-source venv/bin/activate
+source backend/venv/bin/activate
+export PYTHONPATH="${PYTHONPATH}:$(pwd)"
+export CHROMA_TELEMETRY_IMPL="chromadb.telemetry.noop.Noop"
 uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000 &
 BACKEND_PID=$!
-cd ..
 
 # Start frontend in background
 echo "Starting frontend..."

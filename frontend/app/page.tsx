@@ -1,5 +1,5 @@
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import Link from 'next/link'
 
 export default function Home() {
   return (
@@ -16,14 +16,17 @@ export default function Home() {
             <Button size="lg">Start Conversation</Button>
           </Link>
           <Link href="/upload">
-            <Button size="lg" variant="outline">Upload Data</Button>
+            <Button size="lg" variant="outline">
+              Upload Data
+            </Button>
           </Link>
           <Link href="/personality">
-            <Button size="lg" variant="outline">View Personality</Button>
+            <Button size="lg" variant="outline">
+              View Personality
+            </Button>
           </Link>
         </div>
       </div>
     </main>
   )
 }
-

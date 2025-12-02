@@ -2,6 +2,8 @@
  * Global type definitions
  */
 
+import type React from 'react'
+
 export interface ApiResponse<T> {
   data?: T
   error?: string
@@ -34,4 +36,3 @@ export type PropsWithClassName<P = unknown> = P & {
 export type PropsWithChildren<P = unknown> = P & {
   children?: React.ReactNode
 }
-
