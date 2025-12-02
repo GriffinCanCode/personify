@@ -9,7 +9,7 @@ Multi-pass LLM analysis for deep personality extraction:
 import json
 import time
 from typing import List, Dict, Optional, Callable
-from openai import OpenAI
+from anthropic import Anthropic
 
 from backend.config import settings
 from backend.personality.profile import (
@@ -28,7 +28,7 @@ logger = get_logger(__name__)
 class PatternExtractor:
     """Pass 1: Extract patterns for each personality dimension using LLM"""
     
-    def __init__(self, client: OpenAI, model: str):
+    def __init__(self, client: Anthropic, model: str):
         self.client = client
         self.model = model
     
@@ -51,17 +51,14 @@ class PatternExtractor:
         logger.debug(f"extracting_{dimension}", sample_count=len(text_samples))
         
         try:
-            response = self.client.chat.completions.create(
+            response = self.client.messages.create(
                 model=self.model,
-                messages=[
-                    {"role": "system", "content": "You are an expert psychologist and linguistic analyst. Analyze writing samples to extract deep personality patterns. Always respond with valid JSON only, no markdown."},
-                    {"role": "user", "content": prompt}
-                ],
                 max_tokens=max_tokens,
-                temperature=0.3  # Lower temperature for more consistent analysis
+                system="You are an expert psychologist and linguistic analyst. Analyze writing samples to extract deep personality patterns. Always respond with valid JSON only, no markdown.",
+                messages=[{"role": "user", "content": prompt}]
             )
             
-            content = response.choices[0].message.content.strip()
+            content = response.content[0].text.strip()
             # Handle potential markdown code blocks
             if content.startswith("```"):
                 content = content.split("```")[1]
@@ -105,30 +102,26 @@ class PatternExtractor:
 class ProfileSynthesizer:
     """Pass 2: Synthesize raw patterns into coherent personality profile"""
     
-    def __init__(self, client: OpenAI, model: str):
+    def __init__(self, client: Anthropic, model: str):
         self.client = client
         self.model = model
     
     def synthesize(self, raw_analyses: Dict[str, Dict]) -> Dict:
         """Synthesize all dimension analyses into a coherent profile"""
-        # Format raw analyses for the synthesis prompt
         formatted_analyses = json.dumps(raw_analyses, indent=2)
         prompt = SYNTHESIS_PROMPT.format(raw_analyses=formatted_analyses)
         
         logger.info("synthesizing_profile")
         
         try:
-            response = self.client.chat.completions.create(
+            response = self.client.messages.create(
                 model=self.model,
-                messages=[
-                    {"role": "system", "content": "You are synthesizing a comprehensive personality profile. Be insightful and specific. Respond with valid JSON only."},
-                    {"role": "user", "content": prompt}
-                ],
                 max_tokens=2000,
-                temperature=0.4
+                system="You are synthesizing a comprehensive personality profile. Be insightful and specific. Respond with valid JSON only.",
+                messages=[{"role": "user", "content": prompt}]
             )
             
-            content = response.choices[0].message.content.strip()
+            content = response.content[0].text.strip()
             if content.startswith("```"):
                 content = content.split("```")[1]
                 if content.startswith("json"):
@@ -312,11 +305,11 @@ class AnalysisOrchestrator:
         model: Optional[str] = None,
         batch_size: Optional[int] = None
     ):
-        self.model = model or settings.PERSONALITY_ANALYSIS_MODEL
+        self.model = model or settings.ANTHROPIC_ANALYSIS_MODEL
         self.batch_size = batch_size or settings.ANALYSIS_BATCH_SIZE
-        if not settings.OPENAI_API_KEY or not settings.OPENAI_API_KEY.strip():
-            raise ValueError("OPENAI_API_KEY not set. Add it to your .env file.")
-        self.client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        if not settings.ANTHROPIC_API_KEY or not settings.ANTHROPIC_API_KEY.strip():
+            raise ValueError("ANTHROPIC_API_KEY not set. Add it to your .env file.")
+        self.client = Anthropic(api_key=settings.ANTHROPIC_API_KEY)
         self.extractor = PatternExtractor(self.client, self.model)
         self.synthesizer = ProfileSynthesizer(self.client, self.model)
     

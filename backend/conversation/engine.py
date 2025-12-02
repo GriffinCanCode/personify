@@ -1,5 +1,5 @@
 from typing import Dict, Optional
-from openai import OpenAI
+from anthropic import Anthropic
 from sqlalchemy.orm import Session
 
 from backend.config import settings
@@ -18,9 +18,9 @@ class ConversationEngine:
     
     def __init__(self, db: Session):
         self.db = db
-        if not settings.OPENAI_API_KEY or not settings.OPENAI_API_KEY.strip():
-            raise ValueError("OPENAI_API_KEY not set. Add it to your .env file.")
-        self.client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        if not settings.ANTHROPIC_API_KEY or not settings.ANTHROPIC_API_KEY.strip():
+            raise ValueError("ANTHROPIC_API_KEY not set. Add it to your .env file.")
+        self.client = Anthropic(api_key=settings.ANTHROPIC_API_KEY)
         
         logger.debug("initializing_conversation_engine")
         
@@ -99,7 +99,7 @@ class ConversationEngine:
                 )
             
             # Generate response
-            with PerformanceTimer(logger, "generate_llm_response", model=settings.OPENAI_CHAT_MODEL):
+            with PerformanceTimer(logger, "generate_llm_response", model=settings.ANTHROPIC_CHAT_MODEL):
                 response_text = self._generate_response(messages)
             logger.info("llm_response_generated", response_length=len(response_text))
             
@@ -129,14 +129,14 @@ class ConversationEngine:
                     retrieved_chunks=[
                         {
                             'id': chunk['id'],
-                            'content': chunk['content'][:200],  # Truncated for storage
+                            'content': chunk['content'][:200],
                             'metadata': chunk.get('metadata', {})
                         }
                         for chunk in retrieved_chunks[:5]
                     ],
                     metadata={
                         'validation': validation,
-                        'model': settings.OPENAI_CHAT_MODEL
+                        'model': settings.ANTHROPIC_CHAT_MODEL
                     }
                 )
                 
@@ -198,21 +198,30 @@ class ConversationEngine:
         return context
     
     def _generate_response(self, messages: list) -> str:
-        """Generate response using OpenAI API"""
-        logger.debug("calling_openai_api", model=settings.OPENAI_CHAT_MODEL, message_count=len(messages))
+        """Generate response using Anthropic API"""
+        logger.debug("calling_anthropic_api", model=settings.ANTHROPIC_CHAT_MODEL, message_count=len(messages))
         
-        response = self.client.chat.completions.create(
-            model=settings.OPENAI_CHAT_MODEL,
-            messages=messages,
-            temperature=0.7,
-            max_tokens=1000
+        # Extract system message and convert to Anthropic format
+        system_content = ""
+        anthropic_messages = []
+        for msg in messages:
+            if msg["role"] == "system":
+                system_content = msg["content"]
+            else:
+                anthropic_messages.append({"role": msg["role"], "content": msg["content"]})
+        
+        response = self.client.messages.create(
+            model=settings.ANTHROPIC_CHAT_MODEL,
+            max_tokens=1000,
+            system=system_content,
+            messages=anthropic_messages
         )
         
         logger.debug(
-            "openai_api_response_received",
-            model=settings.OPENAI_CHAT_MODEL,
-            finish_reason=response.choices[0].finish_reason
+            "anthropic_api_response_received",
+            model=settings.ANTHROPIC_CHAT_MODEL,
+            stop_reason=response.stop_reason
         )
         
-        return response.choices[0].message.content
+        return response.content[0].text
 

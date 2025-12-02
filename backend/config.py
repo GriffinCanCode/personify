@@ -15,19 +15,18 @@ class Settings(BaseSettings):
     # Vector Store
     CHROMA_PERSIST_DIR: str = "./data/chromadb"
     
-    # OpenAI
+    # OpenAI (used for embeddings only)
     OPENAI_API_KEY: str = ""
-    # text-embedding-3-large: Best quality (3072 dims, 8191 token limit)
-    # Alternative: text-embedding-3-small (1536 dims, faster, cheaper)
     OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-large"
-    OPENAI_CHAT_MODEL: str = "gpt-4o"
     
     # Embedding Settings
-    EMBEDDING_BATCH_SIZE: int = 100  # Texts per API call (max 2048)
-    EMBEDDING_CACHE_SIZE: int = 1000  # LRU cache for embeddings
+    EMBEDDING_BATCH_SIZE: int = 100
+    EMBEDDING_CACHE_SIZE: int = 1000
     
-    # Anthropic
+    # Anthropic (used for chat and analysis)
     ANTHROPIC_API_KEY: str = ""
+    ANTHROPIC_CHAT_MODEL: str = "claude-sonnet-4-20250514"
+    ANTHROPIC_ANALYSIS_MODEL: str = "claude-sonnet-4-20250514"
     
     # File Storage
     UPLOAD_DIR: str = "./data/uploads"
@@ -39,10 +38,8 @@ class Settings(BaseSettings):
     RETRIEVAL_K: int = 7  # Top-K results for RAG
     
     # AI Personality Analysis Configuration
-    PERSONALITY_ANALYSIS_MODEL: str = "gpt-4o"  # Model for personality analysis
-    ANALYSIS_BATCH_SIZE: int = 50  # Max text samples per analysis
-    ANALYSIS_MAX_TOKENS: int = 2000  # Max tokens per LLM analysis call
-    ENABLE_VALIDATION_PASS: bool = False  # Enable Pass 3 validation (future)
+    ANALYSIS_BATCH_SIZE: int = 50
+    ANALYSIS_MAX_TOKENS: int = 2000
     
     # Logging Configuration
     LOG_LEVEL: str = "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
