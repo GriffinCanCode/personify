@@ -27,7 +27,7 @@ openai-whisper==20231117
 # Text Processing
 langchain==0.1.6
 langchain-openai==0.0.5
-langchain-community==0.0.17
+langchain-community==0.0.20
 
 # NLP & Analysis
 nltk==3.8.1
