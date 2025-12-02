@@ -18,6 +18,8 @@ class ConversationEngine:
     
     def __init__(self, db: Session):
         self.db = db
+        if not settings.OPENAI_API_KEY or not settings.OPENAI_API_KEY.strip():
+            raise ValueError("OPENAI_API_KEY not set. Add it to your .env file.")
         self.client = OpenAI(api_key=settings.OPENAI_API_KEY)
         
         logger.debug("initializing_conversation_engine")

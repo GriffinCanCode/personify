@@ -314,6 +314,8 @@ class AnalysisOrchestrator:
     ):
         self.model = model or settings.PERSONALITY_ANALYSIS_MODEL
         self.batch_size = batch_size or settings.ANALYSIS_BATCH_SIZE
+        if not settings.OPENAI_API_KEY or not settings.OPENAI_API_KEY.strip():
+            raise ValueError("OPENAI_API_KEY not set. Add it to your .env file.")
         self.client = OpenAI(api_key=settings.OPENAI_API_KEY)
         self.extractor = PatternExtractor(self.client, self.model)
         self.synthesizer = ProfileSynthesizer(self.client, self.model)

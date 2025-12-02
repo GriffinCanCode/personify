@@ -8,7 +8,24 @@ import time
 from functools import lru_cache
 
 logger = get_logger(__name__)
-client = OpenAI(api_key=settings.OPENAI_API_KEY)
+
+def _get_openai_client() -> OpenAI:
+    """Get OpenAI client with API key validation."""
+    if not settings.OPENAI_API_KEY or not settings.OPENAI_API_KEY.strip():
+        raise ValueError(
+            "OPENAI_API_KEY is not set. Please add it to your .env file:\n"
+            "OPENAI_API_KEY=sk-your-api-key-here"
+        )
+    return OpenAI(api_key=settings.OPENAI_API_KEY)
+
+_client: Optional[OpenAI] = None
+
+def _get_client() -> OpenAI:
+    """Get or create OpenAI client."""
+    global _client
+    if _client is None:
+        _client = _get_openai_client()
+    return _client
 
 # Constants for optimization
 MAX_BATCH_SIZE = 2048  # OpenAI API limit for text-embedding-3-large
